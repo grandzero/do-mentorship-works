@@ -1,0 +1,46 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "homepage": "/",
+  "proxy": "https://localhost:3001",
+  "scripts": {
+    "watch": "webpack --config webpack.common.js --watch",
+    "build": "webpack --config webpack.common.js",
+    "dev": "webpack serve --mode development"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "assert": "^2.0.0",
+    "axios": "^0.25.0",
+    "babel-loader": "^8.2.3",
+    "css-loader": "^6.6.0",
+    "dotenv": "^16.0.0",
+    "ethers": "^5.5.4",
+    "fs": "^0.0.1-security",
+    "https-browserify": "^1.0.0",
+    "os": "^0.1.2",
+    "os-browserify": "^0.3.0",
+    "react": "^17.0.2",
+    "react-app-rewired": "^2.1.11",
+    "react-dom": "^17.0.2",
+    "sass": "^1.49.7",
+    "sass-loader": "^12.4.0",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "style-loader": "^3.3.1",
+    "web3": "^1.7.0",
+    "web3-eth": "^1.7.0",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.2",
+    "electron": "^17.0.0"
+  }
+}

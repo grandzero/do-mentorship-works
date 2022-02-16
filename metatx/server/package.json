@@ -1,0 +1,24 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ethereumjs/common": "^2.6.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "ethereumjs-tx": "^2.1.2",
+    "ethers": "^5.5.4",
+    "express": "^4.17.2",
+    "web3": "^1.7.0"
+  },
+  "devDependencies": {
+    "@ethereumjs/tx": "^3.5.0"
+  }
+}
