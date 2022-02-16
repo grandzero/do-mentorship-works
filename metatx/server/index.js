@@ -12,9 +12,290 @@ const app = express();
 app.use(express.json());
 var cors = require('cors');
 const { hashMessage } = require('ethers/lib/utils');
-const contractAddress = "0x74D657B2f70C17B396710e4C3d1163F9333c2444";
+const contractAddress = "0xe77E55DfF0D8dd1F00e9fa0dAeA5A7c8fA56C58F";
 app.use(cors());
-//const privateKey1 = Buffer.from(process.env.PRIVATE_KEY_1, 'hex');
+const privateKey1 = Buffer.from(process.env.PRIVATE_KEY_1, 'hex');
+ const abi = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "calledBy",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "_messageHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "getEthSignedMessageHash",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_message",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_nonce",
+				"type": "uint256"
+			}
+		],
+		"name": "getMessageHash",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_message",
+				"type": "string"
+			}
+		],
+		"name": "getUnsignedHash",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "lastCalled",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "_ethSignedMessageHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "_signature",
+				"type": "bytes"
+			}
+		],
+		"name": "recoverSigner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "hash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "signature",
+				"type": "bytes"
+			}
+		],
+		"name": "recoverWithECDSA",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes",
+				"name": "sig",
+				"type": "bytes"
+			}
+		],
+		"name": "splitSignature",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "r",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "s",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint8",
+				"name": "v",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_signer",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_message",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_nonce",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "signature",
+				"type": "bytes"
+			}
+		],
+		"name": "verify",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_signer",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "_ethSignedMessageHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "r",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "s",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint8",
+				"name": "v",
+				"type": "uint8"
+			}
+		],
+		"name": "verifyWithRVS",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	}
+];
+
+
+
 
 app.get("/api", (req, res) => {
     res.json({ message: "Hello from server!" });
@@ -79,65 +360,24 @@ app.post("/transaction", async(req,res) => {
 
 app.get("/transaction", async (req,res)=>{
   // Choose Library
-  const {lib1, lib2} = req.query;
-  const contractAddress = "0x5a6427774c2b7a89614d72e7f55848C128377c08";
-  const abi = [
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "_greeting",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "inputs": [],
-      "name": "greet",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "_greeting",
-          "type": "string"
-        }
-      ],
-      "name": "setGreeting",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ];
-
-  web3.eth.getTransactionCount("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", async (err, txCount) => {
+ 
+  web3.eth.getTransactionCount(web3.eth.accounts.privateKeyToAccount(process.env.PRIVATE_KEY_1).address, async (err, txCount) => {
     // Build a transaction
     const contract = await new web3.eth.Contract(abi, contractAddress);
-    let myData=contract.methods.setGreeting("From Backend").encodeABI()
+    let myData=contract.methods.calledBy().encodeABI()
 
     const txObject = {
          nonce: web3.utils.toHex(txCount),
          to: contractAddress,
          //value: web3.utils.toHex(web3.utils.toWei('1', 'ether')),
-         gasLimit: web3.utils.toHex(21000),
+         gasLimit: web3.utils.toHex(210000),
          gasPrice: web3.utils.toHex(web3.utils.toWei('100', 'gwei')),
          data : myData
     }
     // Sign the transaction
     const tx = new Tx(txObject);
     
-    //tx.sign(privateKey1)
+    tx.sign(privateKey1)
     const serializedTransaction = tx.serialize()
     const raw = '0x' + serializedTransaction.toString('hex')
     // Broadcast the transaction
@@ -159,7 +399,7 @@ app.get("/transaction", async (req,res)=>{
 // "0525cdf2b120c810e699bbcee7f052afca732cab561fe123156eb392ef7d0ac0"
 // );
 
-    res.json({signature: {}, contract:contractAddress, abi:abi, raw:raw});
+    res.json({ contract:contractAddress, abi:abi, raw:raw});
   });
   //res.json({signature: signature, contract: contractAddress, abi:abi});
 });
@@ -167,7 +407,7 @@ app.get("/transaction", async (req,res)=>{
   // All other GET requests not handled before will return our React app
 app.get('*', (req, res) => {
    // const root = require('path').join(__dirname, 'client', 'build')
-   console.log(path.resolve(__dirname, '../client', 'index.html'));
+   
     res.sendFile(path.resolve(__dirname, '../client', 'index.html'));
 });
 app.listen(PORT, () => {

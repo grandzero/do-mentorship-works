@@ -1,29 +1,17 @@
 import React from "react";
-import axios from 'axios';
-//import Web3 from 'web3';
-import {ethers} from "ethers";
+
 import SendMessageFrontend from "./SendMessageFrontend";
 import SendMessageBackend from "./SendMessageBackend";
+import SendTxFrontend from "./SendTxFrontend";
 // https://docs.ethers.io/v5/api/provider2s/provider2/#provider2-sendTransaction
 
 window.isSended = false;
 export default function App() {
-   const [input, setInput] = React.useState("");
-  
-   const [frontendSignedMessage, setFrontendSignedMessage] = React.useState();
-   
+
   // const [signature, setSignature] = React.useState();
   // const [transaction, setTransaction] = React.useState();
  
  
-  
-
-
-  const handleSendMessage = () => {
-
-  }
-
-
   // React.useEffect(()=>{
     
   // },[]);
@@ -120,7 +108,17 @@ export default function App() {
   return (
     <div>
       <SendMessageFrontend />
+      <br />
+      <p>---------------------------------------------------------</p>
+      <br/>
       <SendMessageBackend />
+      <br />
+      <p>---------------------------------------------------------</p>
+      <br/>
+      <SendTxFrontend />
+      <br />
+      <p>---------------------------------------------------------</p>
+      <br/>
     </div>
   );
 }
