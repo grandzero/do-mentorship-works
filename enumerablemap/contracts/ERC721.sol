@@ -19,7 +19,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     Counters.Counter private tickTock;
 
     EnumerableMap.UintToAddressMap private _owners;
-
+    mapping(uint256 => bool) public burned;
     // Token name
     string private _name;
 
@@ -387,6 +387,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         _balances[owner] -= 1;
         _owners.remove(tokenId);
+        burned[tokenId] = true;
 
         emit Transfer(owner, address(0), tokenId);
     }
