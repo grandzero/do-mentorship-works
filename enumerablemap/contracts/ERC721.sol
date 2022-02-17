@@ -7,13 +7,16 @@ import "./ERC165.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./EnumerableMap.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "./lib/EnumerableMap.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
+    using Counters for Counters.Counter;
+    Counters.Counter private tickTock;
 
     EnumerableMap.UintToAddressMap private _owners;
 
