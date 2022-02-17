@@ -1,0 +1,77 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Bayram Utku\\Desktop\\do-mentorship-works\\designpatterns\\contracts\\Storage.sol": {
+      "lastModificationDate": 1645127222491,
+      "contentHash": "b2a1eb3cd6d06072a5d08bc33e6c03b8",
+      "sourceName": "contracts/Storage.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Storage"
+      ]
+    },
+    "C:\\Users\\Bayram Utku\\Desktop\\do-mentorship-works\\designpatterns\\contracts\\Owner.sol": {
+      "lastModificationDate": 1645127087153,
+      "contentHash": "d37e769fb0297e5a7b7f6deee8457709",
+      "sourceName": "contracts/Owner.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Storage.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Owner"
+      ]
+    }
+  }
+}
