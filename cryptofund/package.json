@@ -10,6 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "hardhat": "^2.8.4"
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "chai": "^4.3.6",
+    "hardhat": "^2.8.4",
+    "solidity-linked-list": "^5.1.0"
   }
 }
