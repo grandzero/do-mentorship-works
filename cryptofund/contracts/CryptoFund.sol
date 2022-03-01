@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
+import "./lib/EnumerableMap.sol";
 
 contract CryptoFund {
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
     enum State {
         Pending,
         Active,
@@ -14,13 +16,17 @@ contract CryptoFund {
         uint256 requestedAmount;
         uint256 totalFunded;
     }
+    struct Investor {
+        uint256 totalRegisterAmount;
+        uint256 voteRightLeft;
+    }
     uint256 public endDate;
     State private activeState;
     mapping(address => Startup) startups;
     address public owner;
     address public winner;
-    mapping(address => uint256) voteRightLeft;
-    mapping(address => mapping(address => uint256)) usersInvestments; // User's investment amount on T;
+    mapping(address => Investor) investors;
+    mapping(address => EnumerableMap.AddressToUintMap) usersInvestments; // User's investment amount on T;
 
     constructor() {
         owner = msg.sender;
@@ -58,6 +64,7 @@ contract CryptoFund {
      */
     function registerStartup(uint256 proposalAmount) external {
         require(proposalAmount > 0, "Minimum amount can't be 0");
+        require(activeState == State.Pending, "Acceptance completed");
         Startup memory newRegister = Startup(proposalAmount, 0);
         startups[msg.sender] = newRegister;
     }
@@ -86,7 +93,8 @@ contract CryptoFund {
             msg.value > 0,
             "You need to send at least 1 wei to register as investor"
         );
-        voteRightLeft[msg.sender] = msg.value;
+        investors[msg.sender].totalRegisterAmount = msg.value;
+        investors[msg.sender].voteRightLeft = msg.value;
     }
 
     /**
@@ -126,9 +134,16 @@ contract CryptoFund {
         // Only investors will have voteLeft bigger then 1
         // Check if investor enough fund
         require(isValidStartup(_startup), "Startup is not valid");
-        require(_amount <= voteRightLeft[msg.sender], "Insufficient balance");
-        voteRightLeft[msg.sender] -= _amount;
-        usersInvestments[msg.sender][_startup] += _amount;
+        require(
+            _amount <= investors[msg.sender].voteRightLeft,
+            "Insufficient balance"
+        );
+        investors[msg.sender].voteRightLeft -= _amount;
+        EnumerableMap.AddressToUintMap storage invesments = usersInvestments[
+            msg.sender
+        ];
+        uint256 investedAmount = invesments.get(_startup);
+        invesments.set(_startup, investedAmount + _amount);
         startups[_startup].totalFunded += _amount;
         if (
             winner == address(0) &&
@@ -139,11 +154,68 @@ contract CryptoFund {
         }
     }
 
+    /**
+     * @dev This internal function checks is given startup is valid
+     * @param _startup address to be checked
+     * @return return if valid, return true else false
+     */
     function isValidStartup(address _startup) internal view returns (bool) {
         if (_startup == address(0) || startups[msg.sender].requestedAmount > 0)
             return false;
         return true;
     }
 
-    receive() external payable {}
+    /**
+     * @dev winner can get requested amount, this function can be called if
+     * Time completed
+     * Sender is winner
+     * Winner did't withdraw fund already
+     */
+    function claimStartupFund() external payable {
+        require(block.timestamp > endDate, "Funding is not completed");
+        require(
+            msg.sender == winner,
+            "You can't receive funds if you are not winner"
+        );
+        require(
+            startups[msg.sender].requestedAmount > 0,
+            "Winner already withdrawed prize"
+        );
+        startups[msg.sender].requestedAmount = 0;
+        payable(winner).transfer(startups[winner].requestedAmount);
+    }
+
+    /**
+     * @dev This function can be called if
+     * Investor is valid
+     * Investor has funds on startups
+     * Investor didn't withraw already
+     */
+    function claimInvestor() external payable {
+        EnumerableMap.AddressToUintMap
+            storage sendersInvestments = usersInvestments[msg.sender];
+        require(
+            investors[msg.sender].totalRegisterAmount > 0,
+            "User is not valid"
+        );
+        require(block.timestamp > endDate, "Funding is not completed");
+        uint256 withdrawAmount;
+        withdrawAmount += investors[msg.sender].voteRightLeft;
+
+        for (uint256 i = 0; i < sendersInvestments.length(); i++) {
+            (address startup, uint256 investedAmount) = sendersInvestments.at(
+                i
+            );
+            if (startup == winner) {
+                withdrawAmount += investedAmount;
+            } else {
+                uint256 allAmount = startups[winner].totalFunded;
+                uint256 ratio = (investedAmount / allAmount);
+                withdrawAmount += startups[winner].requestedAmount * ratio;
+            }
+        }
+        investors[msg.sender].totalRegisterAmount = 0;
+        investors[msg.sender].voteRightLeft = 0;
+        payable(msg.sender).transfer(withdrawAmount);
+    }
 }
