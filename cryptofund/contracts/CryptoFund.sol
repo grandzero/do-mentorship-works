@@ -2,30 +2,25 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
-import "solidity-linked-list/contracts/StructuredLinkedList.sol";
-import "./lib/EnumerableMap.sol";
 
 contract CryptoFund {
-    struct Investor {
-        uint256 totalFund;
-        uint256 voteLeft;
-        uint256[] investmentId;
-        address user;
-    }
     enum State {
         Pending,
         Active,
         Completed,
         Paused
     }
-    State private activeState;
-    using StructuredLinkedList for StructuredLinkedList.List;
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
-    StructuredLinkedList.List private investmentsList;
-    EnumerableMap.AddressToUintMap private startups;
-    Investor[] private investors;
-    address public owner;
+    struct Startup {
+        uint256 requestedAmount;
+        uint256 totalFunded;
+    }
     uint256 public endDate;
+    State private activeState;
+    mapping(address => Startup) startups;
+    address public owner;
+    address public winner;
+    mapping(address => uint256) voteRightLeft;
+    mapping(address => mapping(address => uint256)) usersInvestments; // User's investment amount on T;
 
     constructor() {
         owner = msg.sender;
@@ -44,6 +39,7 @@ contract CryptoFund {
      */
     modifier isActive() {
         require(activeState == State.Active, "Funding is not active yet");
+        require(endDate > block.timestamp, "End date passed");
         _;
     }
 
@@ -62,35 +58,23 @@ contract CryptoFund {
      */
     function registerStartup(uint256 proposalAmount) external {
         require(proposalAmount > 0, "Minimum amount can't be 0");
-        startups.set(msg.sender, proposalAmount);
-    }
-
-    /**
-     * @dev returns proposal owner and amount
-     * @param index uint256, index in the list
-     * @return address, uint256 returns address of startup and required amount
-     */
-    function getProposalAt(uint256 index)
-        external
-        view
-        returns (address, uint256)
-    {
-        return startups.at(index);
+        Startup memory newRegister = Startup(proposalAmount, 0);
+        startups[msg.sender] = newRegister;
     }
 
     /**
      * @dev function returns required amount for spesific startup
-     * @param  startup address of selected startup
+     * @param  _startup address of selected startup
      * @return uint256 value of required amount
      */
-    function getAmountOfProposal(address startup)
+    function getAmountOfProposal(address _startup)
         external
         view
         returns (uint256)
     {
-        (bool success, uint256 amount) = startups.tryGet(startup);
-        require(success, "Could not find startup");
-        return amount;
+        require(isValidStartup(_startup), "Startup address is not valid");
+
+        return startups[_startup].requestedAmount;
     }
 
     /**
@@ -102,11 +86,11 @@ contract CryptoFund {
             msg.value > 0,
             "You need to send at least 1 wei to register as investor"
         );
-        uint256[] memory empty;
-        investors.push(Investor(msg.value, msg.value, empty, msg.sender));
+        voteRightLeft[msg.sender] = msg.value;
     }
 
     /**
+     * @notice Funding automatically becomes active when enddate imported
      * @dev sets the endtime for funding round
      * @param _endTime endtime of funding
      */
@@ -116,6 +100,49 @@ contract CryptoFund {
             "End time should be bigger then 15 second of current"
         );
         endDate = _endTime;
+        activeState = State.Active;
+    }
+
+    /**
+     * @dev sets the active state
+     * @param _st is desired state
+     */
+    function setActiveState(State _st) public onlyOwner {
+        activeState = _st;
+    }
+
+    /**
+     * @dev Only registered investors can invest
+     * Status should be active
+     * Investor should have enough fund
+     * @param _startup address of startup
+     * @param _amount desired amount of investment
+     */
+    function investWithAddress(address _startup, uint256 _amount)
+        external
+        isActive
+    {
+        // This line checks two requirement
+        // Only investors will have voteLeft bigger then 1
+        // Check if investor enough fund
+        require(isValidStartup(_startup), "Startup is not valid");
+        require(_amount <= voteRightLeft[msg.sender], "Insufficient balance");
+        voteRightLeft[msg.sender] -= _amount;
+        usersInvestments[msg.sender][_startup] += _amount;
+        startups[_startup].totalFunded += _amount;
+        if (
+            winner == address(0) &&
+            startups[_startup].totalFunded >= startups[_startup].requestedAmount
+        ) {
+            // Save first winner
+            winner = _startup;
+        }
+    }
+
+    function isValidStartup(address _startup) internal view returns (bool) {
+        if (_startup == address(0) || startups[msg.sender].requestedAmount > 0)
+            return false;
+        return true;
     }
 
     receive() external payable {}
