@@ -22,10 +22,10 @@ contract CryptoFund {
     }
     uint256 public endDate;
     State private activeState;
-    mapping(address => Startup) startups;
+    mapping(address => Startup) public startups;
     address public owner;
     address public winner;
-    mapping(address => Investor) investors;
+    mapping(address => Investor) public investors;
     mapping(address => EnumerableMap.AddressToUintMap) usersInvestments; // User's investment amount on T;
 
     constructor() {
@@ -104,10 +104,10 @@ contract CryptoFund {
      */
     function setEndTime(uint256 _endTime) external onlyOwner {
         require(
-            _endTime > block.timestamp + 15,
+            _endTime > 15,
             "End time should be bigger then 15 second of current"
         );
-        endDate = _endTime;
+        endDate = block.timestamp + _endTime;
         activeState = State.Active;
     }
 
@@ -117,6 +117,22 @@ contract CryptoFund {
      */
     function setActiveState(State _st) public onlyOwner {
         activeState = _st;
+    }
+
+    /**
+     * @dev Returns user's investment at selected address
+     * @param index given index number
+     * @return address, uint256 address of startup, amount invested to that startup
+     */
+    function getUsersSelectedInvestment(uint256 index)
+        public
+        view
+        returns (address, uint256)
+    {
+        EnumerableMap.AddressToUintMap storage invesments = usersInvestments[
+            msg.sender
+        ];
+        return invesments.at(index);
     }
 
     /**
@@ -142,7 +158,7 @@ contract CryptoFund {
         EnumerableMap.AddressToUintMap storage invesments = usersInvestments[
             msg.sender
         ];
-        uint256 investedAmount = invesments.get(_startup);
+        (bool success, uint256 investedAmount) = invesments.tryGet(_startup);
         invesments.set(_startup, investedAmount + _amount);
         startups[_startup].totalFunded += _amount;
         if (
