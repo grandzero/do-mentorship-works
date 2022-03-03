@@ -81,7 +81,7 @@ describe("CryptoFund", function () {
   it("Should give investor vote right as much as his investment", async function(){
       await successCallback("registerStartup",[1000],null,false,addr1); // Register startup with 1 address
       await successCallback("setEndTime",[60*15],null,false); // Set end time for 5 minutes later
-      await successCallback("registerUser",null,{value:10000},true,addr2); // Register with 1 investor
+      await successCallback("registerUser",null,{value:10000},false,addr2); // Register with 1 investor
       await successCallback("investWithAddress", [addr1.address,10000],null,true,addr2) // addr2 invests all his money
       let investmentOfaddr2 = await cf.connect(addr2).getUsersSelectedInvestment(0);
       await expect(investmentOfaddr2[0] === addr1.address && investmentOfaddr2[1].toString() === "10000").to.equal(true);
@@ -90,11 +90,59 @@ describe("CryptoFund", function () {
   it("Should't give investor vote right more then his investment", async function(){
     await successCallback("registerStartup",[1000],null,false,addr1); // Register startup with 1 address
     await successCallback("setEndTime",[60*15],null,false); // Set end time for 5 minutes later
-    await successCallback("registerUser",null,{value:10000},true,addr2); // Register with 1 investor
+    await successCallback("registerUser",null,{value:10000},false,addr2); // Register with 1 investor
     await expect(failCallback("investWithAddress", [addr1.address,1000001],null,addr2)).to.be.revertedWith("Insufficient balance");
-});
+  });
 
-  it("Should let investor invest to startup", async function(){
+  it(`Should make
+      -Four investors be able to invest in two startups
+      -Make one winner`, 
+    async function(){
+    // Register 2 startup 1000 / 5000
+    await successCallback("registerStartup",[1000],null,false,addr1); // Register startup with address1
+    await successCallback("registerStartup",[5000],null,false,addr2); // Register startup with address2
+    // Register 4 investor 10000 / 10000 / 10000 / 10000
+    for(let i = 0; i<4; ++i){
+      await successCallback("registerUser",null,{value:10000},false,addrAll[i]); // Register investor
+    }
+    // Set State Active
+    await successCallback("setEndTime",[60*15],null,false); // Set end time for 5 minutes later
+    // Invest Investor1 => 500 => Startup1
+    await successCallback("investWithAddress", [addr1.address,500],null,false,addrAll[0]);
+    // Invest Investor1 => 1000 => Startup2
+    await successCallback("investWithAddress", [addr2.address,1000],null,false,addrAll[0]);
+
+    // Invest Investor2 => 200 => Startup1
+    await successCallback("investWithAddress", [addr1.address,200],null,false,addrAll[1]);
+    // Invest Investor2 => 1500 => Startup2
+    await successCallback("investWithAddress", [addr2.address,1500],null,false,addrAll[1]);
+
+    // Invest Investor3 => 200 => Startup1
+    await successCallback("investWithAddress", [addr1.address,200],null,false,addrAll[2]);
+    // Invest Investor3 => 1500 => Startup2
+    await successCallback("investWithAddress", [addr2.address,1500],null,false,addrAll[2]);
+
+
+    // Invest Investor4 => 50 => Startup1
+    await successCallback("investWithAddress", [addr1.address,50],null,false,addrAll[3]);
+    // Invest Investor4 => 5000 => Startup2
+    await successCallback("investWithAddress", [addr2.address,5000],null,false,addrAll[3]);
+
+    // Winner will be Startup2
+    let winnerAddress = await cf.winner();
+    // Winner startup will have 9000 fund
+    let winnerStartupDetails = await cf.startups(winnerAddress);
+    // Second startup will have 950 fund total
+    let secondStartupDetails = await cf.startups(addr1.address);
+
+    let condition = 
+    winnerAddress === addr2.address && 
+    winnerStartupDetails.totalFunded.toString() === "9000" &&
+    winnerStartupDetails.requestedAmount.toString() === "5000" &&
+    secondStartupDetails.requestedAmount.toString() === "1000" &&
+    secondStartupDetails.totalFunded.toString() === "950";
+
+    expect(condition).to.equal(true);
 
   });
 
@@ -107,6 +155,10 @@ describe("CryptoFund", function () {
   });
 
   it("Should investors should be able to claim all non-used funds", async function(){
+
+  });
+
+  it("Should't investors claim funds twice", async function(){
 
   });
 
