@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\Bayram Utku\\Desktop\\do-mentorship-works\\cryptofund\\contracts\\CryptoFund.sol": {
-      "lastModificationDate": 1646302880421,
-      "contentHash": "f97e3165349de0646d63f10521710014",
+      "lastModificationDate": 1646319905346,
+      "contentHash": "01656112e05cca8f4f17df14429831e6",
       "sourceName": "contracts/CryptoFund.sol",
       "solcConfig": {
         "version": "0.8.4",

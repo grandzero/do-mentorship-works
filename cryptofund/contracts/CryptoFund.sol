@@ -21,6 +21,7 @@ contract CryptoFund {
         uint256 voteRightLeft;
     }
     uint256 public endDate;
+    uint256 public winnerRequestedAmount;
     State private activeState;
     mapping(address => Startup) public startups;
     address public owner;
@@ -167,6 +168,7 @@ contract CryptoFund {
         ) {
             // Save first winner
             winner = _startup;
+            winnerRequestedAmount = startups[_startup].requestedAmount;
         }
     }
 
@@ -195,10 +197,11 @@ contract CryptoFund {
         );
         require(
             startups[msg.sender].requestedAmount > 0,
-            "Winner already withdrawed prize"
+            "You are not a valid startup"
         );
+        uint256 price = startups[msg.sender].requestedAmount;
         startups[msg.sender].requestedAmount = 0;
-        payable(winner).transfer(startups[winner].requestedAmount);
+        payable(winner).transfer(price);
     }
 
     /**
@@ -208,12 +211,13 @@ contract CryptoFund {
      * Investor didn't withraw already
      */
     function claimInvestor() external payable {
-        EnumerableMap.AddressToUintMap
-            storage sendersInvestments = usersInvestments[msg.sender];
         require(
             investors[msg.sender].totalRegisterAmount > 0,
             "User is not valid"
         );
+        EnumerableMap.AddressToUintMap
+            storage sendersInvestments = usersInvestments[msg.sender];
+
         require(block.timestamp > endDate, "Funding is not completed");
         uint256 withdrawAmount;
         withdrawAmount += investors[msg.sender].voteRightLeft;
@@ -222,16 +226,18 @@ contract CryptoFund {
             (address startup, uint256 investedAmount) = sendersInvestments.at(
                 i
             );
-            if (startup == winner) {
+            if (startup != winner) {
                 withdrawAmount += investedAmount;
             } else {
                 uint256 allAmount = startups[winner].totalFunded;
-                uint256 ratio = (investedAmount / allAmount);
-                withdrawAmount += startups[winner].requestedAmount * ratio;
+
+                withdrawAmount +=
+                    investedAmount -
+                    ((winnerRequestedAmount * investedAmount) / allAmount);
             }
         }
         investors[msg.sender].totalRegisterAmount = 0;
         investors[msg.sender].voteRightLeft = 0;
-        payable(msg.sender).transfer(withdrawAmount);
+        payable(msg.sender).transfer(withdrawAmount - 1);
     }
 }
