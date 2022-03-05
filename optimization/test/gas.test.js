@@ -74,6 +74,23 @@ describe("Stress tests on different NFT proposals", function () {
     expect(await e721.ownerOf(999)).to.equal(addr1.address);
 });
 
+// it("Should mint 7777 NFT from ERC721", async function () {
+//   for(let i = 0; i<7777; ++i){
+//     let tx = await e721.connect(addr1).claim();
+//     let receipt = await tx.wait();
+//     const gasUsed = receipt.cumulativeGasUsed;
+//     gasUsage.claimERC721_7777 = gasUsage?.claimERC721_7777 ? gasUsage.claimERC721_7777.add(gasUsed) : gasUsed;
+//   }
+//   gasUsage.claimERC721String_7777 = gasUsage.claimERC721_7777.toString();
+//   expect(await e721.ownerOf(999)).to.equal(addr1.address);
+// });
+
+/**
+ * 
+ * BATCH MINT ERC1155
+ * 
+ */
+
 it("Should batch mint 10 NFT from ERC1155", async function () {
   let numbersArray = Array.from(Array(10).keys());
   let onesArray = Array.from({length: 10}, (_, index) => 1);
@@ -87,11 +104,104 @@ it("Should batch mint 10 NFT from ERC1155", async function () {
   expect(await e11.balanceOf(addr1.address,9)).to.equal(1);
 });
 
+it("Should batch mint 100 NFT from ERC1155", async function () {
+  let numbersArray = Array.from(Array(100).keys());
+  let onesArray = Array.from({length: 100}, (_, index) => 1);
+
+  let tx = await e11.connect(addr1).mintBatch(numbersArray, onesArray, []);
+  let receipt = await tx.wait();
+  const gasUsed = receipt.cumulativeGasUsed;
+  gasUsage.claimERC1155_batch100 = gasUsage?.claimERC1155_batch100 ? gasUsage.claimERC1155_batch100.add(gasUsed) : gasUsed;
+  
+  gasUsage.claimERC1155String_batch100 = gasUsage.claimERC1155_batch100.toString();
+  expect(await e11.balanceOf(addr1.address,99)).to.equal(1);
+});
+
+it("Should batch mint 1000 NFT from ERC1155", async function () {
+  let numbersArray = Array.from(Array(1000).keys());
+  let onesArray = Array.from({length: 1000}, (_, index) => 1);
+
+  let tx = await e11.connect(addr1).mintBatch(numbersArray, onesArray, []);
+  let receipt = await tx.wait();
+  const gasUsed = receipt.cumulativeGasUsed;
+  gasUsage.claimERC1155_batch1000 = gasUsage?.claimERC1155_batch1000 ? gasUsage.claimERC1155_batch1000.add(gasUsed) : gasUsed;
+  
+  gasUsage.claimERC1155String_batch1000 = gasUsage.claimERC1155_batch1000.toString();
+  expect(await e11.balanceOf(addr1.address,99)).to.equal(1);
+});
+
+// it("Should batch mint 7777 NFT from ERC1155", async function () {
+//   let numbersArray = Array.from(Array(7777).keys());
+//   let onesArray = Array.from({length: 7777}, (_, index) => 1);
+
+//   let tx = await e11.connect(addr1).mintBatch(numbersArray, onesArray, []);
+//   let receipt = await tx.wait();
+//   const gasUsed = receipt.cumulativeGasUsed;
+//   gasUsage.claimERC1155_batch7777 = gasUsage?.claimERC1155_batch7777 ? gasUsage.claimERC1155_batch7777.add(gasUsed) : gasUsed;
+  
+//   gasUsage.claimERC1155String_batch7777 = gasUsage.claimERC1155_batch7777.toString();
+//   expect(await e11.balanceOf(addr1.address,99)).to.equal(1);
+// });
+
+/**
+ * 
+ * LOOP MINT ERC1155
+ * 
+ */
+
+ it("Should LOOP mint 10 NFT from ERC1155", async function () {
+
+  for(let i = 0; i<10; ++i){
+    let tx = await e11.connect(addr1).mint([]);
+    let receipt = await tx.wait();
+    const gasUsed = receipt.cumulativeGasUsed;
+    gasUsage.claimERC1155_loop = gasUsage?.claimERC1155_loop ? gasUsage.claimERC1155_loop.add(gasUsed) : gasUsed;
+  }
+  gasUsage.claimERC1155String_loop = gasUsage.claimERC1155_loop.toString();
+  expect(await e11.balanceOf(addr1.address,9)).to.equal(1);
+});
+
+it("Should LOOP mint 100 NFT from ERC1155", async function () {
+
+  for(let i = 0; i<100; ++i){
+    let tx = await e11.connect(addr1).mint([]);
+    let receipt = await tx.wait();
+    const gasUsed = receipt.cumulativeGasUsed;
+    gasUsage.claimERC1155_loop100 = gasUsage?.claimERC1155_loop100 ? gasUsage.claimERC1155_loop100.add(gasUsed) : gasUsed;
+  }
+  gasUsage.claimERC1155String_loop100 = gasUsage.claimERC1155_loop100.toString();
+  expect(await e11.balanceOf(addr1.address,99)).to.equal(1);
+});
+
+it("Should LOOP mint 1000 NFT from ERC1155", async function () {
+
+  for(let i = 0; i<1000; ++i){
+    let tx = await e11.connect(addr1).mint([]);
+    let receipt = await tx.wait();
+    const gasUsed = receipt.cumulativeGasUsed;
+    gasUsage.claimERC1155_loop1000 = gasUsage?.claimERC1155_loop1000 ? gasUsage.claimERC1155_loop1000.add(gasUsed) : gasUsed;
+  }
+  gasUsage.claimERC1155String_loop1000 = gasUsage.claimERC1155_loop1000.toString();
+  expect(await e11.balanceOf(addr1.address,99)).to.equal(1);
+});
+
+
+
+
   it("", async function(){
+    gasUsage.difference = gasUsage.claimERC721_1000.sub(gasUsage.claimERC1155_loop1000);
+    gasUsage.difference = gasUsage.difference.toString();
     delete gasUsage.claimERC721;
     delete gasUsage.claimERC721_100;
     delete gasUsage.claimERC721_1000;
+    // delete gasUsage.claimERC721_7777; // To be able to test this big loops, need to increase timeout and gas hardhat config
     delete gasUsage.claimERC1155_batch10;
+    delete gasUsage.claimERC1155_batch100;
+    delete gasUsage.claimERC1155_batch1000;
+    // delete gasUsage.claimERC1155_batch7777; // To be able to test this big loops, need to increase timeout and gas hardhat config
+    delete gasUsage.claimERC1155_loop;
+    delete gasUsage.claimERC1155_loop100;
+    delete gasUsage.claimERC1155_loop1000;
     console.table(gasUsage);
   })
 });
