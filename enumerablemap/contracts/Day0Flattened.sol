@@ -845,6 +845,20 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
                 : "";
     }
 
+    function pagination(uint256 page) external view returns (bool[20] memory) {
+        uint256 i;
+        uint256 index = 0;
+        require(page < 72, "Page should be lower then 72");
+        bool[20] memory pageResults;
+        for (i = page * 20; i < (page + 1) * 20; i++) {
+            (bool res, ) = _owners.tryGet(i);
+            pageResults[index] = res;
+            ++index;
+        }
+
+        return pageResults;
+    }
+
     /**
      * @dev Base URI for computing {f&
      }. If set, the resulting URI for each
@@ -1212,219 +1226,63 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 }
 
 /**
- * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
- * @dev See https://eips.ethereum.org/EIPS/eip-721
+ * @title Pausable
+ * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
-interface IERC721Enumerable is IERC721 {
-    /**
-     * @dev Returns the total amount of tokens stored by the contract.
-     */
-    function totalSupply() external view returns (uint256);
+contract Pausable is Ownable {
+    event Pause();
+    event Unpause();
+
+    bool public paused = false;
 
     /**
-     * @dev Returns a token ID owned by `owner` at a given `index` of its token list.
-     * Use along with {balanceOf} to enumerate all of ``owner``'s tokens.
+     * @dev Modifier to make a function callable only when the contract is not paused.
      */
-    function tokenOfOwnerByIndex(address owner, uint256 index)
-        external
-        view
-        returns (uint256 tokenId);
+    modifier whenNotPaused() {
+        require(!paused);
+        _;
+    }
 
     /**
-     * @dev Returns a token ID at a given `index` of all the tokens stored by the contract.
-     * Use along with {totalSupply} to enumerate all tokens.
+     * @dev Modifier to make a function callable only when the contract is paused.
      */
-    function tokenByIndex(uint256 index) external view returns (uint256);
+    modifier whenPaused() {
+        require(paused);
+        _;
+    }
+
+    /**
+     * @dev called by the owner to pause, triggers stopped state
+     */
+    function pause() public onlyOwner whenNotPaused {
+        paused = true;
+        emit Pause();
+    }
+
+    /**
+     * @dev called by the owner to unpause, returns to normal state
+     */
+    function unpause() public onlyOwner whenPaused {
+        paused = false;
+        emit Unpause();
+    }
 }
 
-/**
- * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
- * enumerability of all the token ids in the contract as well as all token ids owned by each
- * account.
- */
-abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
-    // Mapping from owner to list of owned token IDs
-    mapping(address => mapping(uint256 => uint256)) private _ownedTokens;
+contract TimeDay0 is ERC721, Ownable, Pausable, ReentrancyGuard {
+    uint256 public constant totalSupply = 1440;
+    uint256 public salesPrice;
 
-    // Mapping from token ID to index of the owner tokens list
-    mapping(uint256 => uint256) private _ownedTokensIndex;
-
-    // Array with all token ids, used for enumeration
-    uint256[] private _allTokens;
-
-    // Mapping from token id to position in the allTokens array
-    mapping(uint256 => uint256) private _allTokensIndex;
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(IERC165, ERC721)
-        returns (bool)
-    {
-        return
-            interfaceId == type(IERC721Enumerable).interfaceId ||
-            super.supportsInterface(interfaceId);
+    constructor(uint256 _salesPrice) ERC721("Day ZERO", "TIME") {
+        salesPrice = _salesPrice;
     }
 
-    /**
-     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
-     */
-    function tokenOfOwnerByIndex(address owner, uint256 index)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        require(
-            index < ERC721.balanceOf(owner),
-            "ERC721Enumerable: owner index out of bounds"
-        );
-        return _ownedTokens[owner][index];
-    }
-
-    /**
-     * @dev See {IERC721Enumerable-totalSupply}.
-     */
-    function totalSupply() public view virtual override returns (uint256) {
-        return _allTokens.length;
-    }
-
-    /**
-     * @dev See {IERC721Enumerable-tokenByIndex}.
-     */
-    function tokenByIndex(uint256 index)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        require(
-            index < ERC721Enumerable.totalSupply(),
-            "ERC721Enumerable: global index out of bounds"
-        );
-        return _allTokens[index];
-    }
-
-    /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override {
+    ) internal override whenNotPaused {
         super._beforeTokenTransfer(from, to, tokenId);
-
-        if (from == address(0)) {
-            _addTokenToAllTokensEnumeration(tokenId);
-        } else if (from != to) {
-            _removeTokenFromOwnerEnumeration(from, tokenId);
-        }
-        if (to == address(0)) {
-            _removeTokenFromAllTokensEnumeration(tokenId);
-        } else if (to != from) {
-            _addTokenToOwnerEnumeration(to, tokenId);
-        }
     }
-
-    /**
-     * @dev Private function to add a token to this extension's ownership-tracking data structures.
-     * @param to address representing the new owner of the given token ID
-     * @param tokenId uint256 ID of the token to be added to the tokens list of the given address
-     */
-    function _addTokenToOwnerEnumeration(address to, uint256 tokenId) private {
-        uint256 length = ERC721.balanceOf(to);
-        _ownedTokens[to][length] = tokenId;
-        _ownedTokensIndex[tokenId] = length;
-    }
-
-    /**
-     * @dev Private function to add a token to this extension's token tracking data structures.
-     * @param tokenId uint256 ID of the token to be added to the tokens list
-     */
-    function _addTokenToAllTokensEnumeration(uint256 tokenId) private {
-        _allTokensIndex[tokenId] = _allTokens.length;
-        _allTokens.push(tokenId);
-    }
-
-    /**
-     * @dev Private function to remove a token from this extension's ownership-tracking data structures. Note that
-     * while the token is not assigned a new owner, the `_ownedTokensIndex` mapping is _not_ updated: this allows for
-     * gas optimizations e.g. when performing a transfer operation (avoiding double writes).
-     * This has O(1) time complexity, but alters the order of the _ownedTokens array.
-     * @param from address representing the previous owner of the given token ID
-     * @param tokenId uint256 ID of the token to be removed from the tokens list of the given address
-     */
-    function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId)
-        private
-    {
-        // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
-        // then delete the last slot (swap and pop).
-
-        uint256 lastTokenIndex = ERC721.balanceOf(from) - 1;
-        uint256 tokenIndex = _ownedTokensIndex[tokenId];
-
-        // When the token to delete is the last token, the swap operation is unnecessary
-        if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = _ownedTokens[from][lastTokenIndex];
-
-            _ownedTokens[from][tokenIndex] = lastTokenId; // Move the last token to the slot of the to-delete token
-            _ownedTokensIndex[lastTokenId] = tokenIndex; // Update the moved token's index
-        }
-
-        // This also deletes the contents at the last position of the array
-        delete _ownedTokensIndex[tokenId];
-        delete _ownedTokens[from][lastTokenIndex];
-    }
-
-    /**
-     * @dev Private function to remove a token from this extension's token tracking data structures.
-     * This has O(1) time complexity, but alters the order of the _allTokens array.
-     * @param tokenId uint256 ID of the token to be removed from the tokens list
-     */
-    function _removeTokenFromAllTokensEnumeration(uint256 tokenId) private {
-        // To prevent a gap in the tokens array, we store the last token in the index of the token to delete, and
-        // then delete the last slot (swap and pop).
-
-        uint256 lastTokenIndex = _allTokens.length - 1;
-        uint256 tokenIndex = _allTokensIndex[tokenId];
-
-        // When the token to delete is the last token, the swap operation is unnecessary. However, since this occurs so
-        // rarely (when the last minted token is burnt) that we still do the swap here to avoid the gas cost of adding
-        // an 'if' statement (like in _removeTokenFromOwnerEnumeration)
-        uint256 lastTokenId = _allTokens[lastTokenIndex];
-
-        _allTokens[tokenIndex] = lastTokenId; // Move the last token to the slot of the to-delete token
-        _allTokensIndex[lastTokenId] = tokenIndex; // Update the moved token's index
-
-        // This also deletes the contents at the last position of the array
-        delete _allTokensIndex[tokenId];
-        _allTokens.pop();
-    }
-}
-
-contract TimeNFT is ERC721Enumerable, ReentrancyGuard, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private tickTock;
-    uint256 private immutable salePrice;
 
     function getFirstDigit(uint8 number) internal pure returns (string memory) {
         string[7] memory sticks = [
@@ -1726,28 +1584,23 @@ contract TimeNFT is ERC721Enumerable, ReentrancyGuard, Ownable {
         return output;
     }
 
-    function claim() public payable nonReentrant {
-        require(
-            tickTock.current() >= 0 && tickTock.current() < 1440,
-            "Token ID invalid"
-        );
-        require(msg.value >= salePrice, "Not enough fund");
-        _safeMint(_msgSender(), tickTock.current());
-        tickTock.increment();
+    function updatePrice(uint256 _newPrice) external onlyOwner {
+        salesPrice = _newPrice;
     }
 
-    // function ownerClaim(uint256 tokenId) public nonReentrant onlyOwner {
-    //     require(tokenId > 7777 && tokenId < 8001, "Token ID invalid");
-    //     _safeMint(owner(), tokenId);
-    // }
-
-    function withdrawAll() external payable onlyOwner {
-        (bool sent, ) = _msgSender().call{value: address(this).balance}("");
-        require(sent, "Could not transfer amount");
+    function burnNotOwned(uint256 _tokenId) external onlyOwner {
+        require(ownerOf(_tokenId) == address(0));
+        require(!burned[_tokenId]);
+        _burn(_tokenId);
     }
 
-    constructor(uint256 _price) ERC721("Day ZERO", "TIME") Ownable() {
-        salePrice = _price;
+    function ownerMint(uint256 _tokenId) external onlyOwner {}
+
+    function claim(uint256 _id) public payable nonReentrant {
+        require(_id >= 0 || _id <= 1440);
+        require(!burned[_id]);
+        require(msg.value >= salesPrice, "Not enough fund");
+        _safeMint(_msgSender(), _id);
     }
 }
 

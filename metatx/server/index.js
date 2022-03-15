@@ -13,7 +13,6 @@ app.use(express.json());
 var cors = require('cors');
 const { hashMessage } = require('ethers/lib/utils');
 const contractAddress = "0xe77E55DfF0D8dd1F00e9fa0dAeA5A7c8fA56C58F";
-app.use(cors());
 const privateKey1 = Buffer.from(process.env.PRIVATE_KEY_1, 'hex');
  const abi = [
 	{

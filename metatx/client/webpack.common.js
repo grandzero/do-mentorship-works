@@ -3,7 +3,7 @@ var SRC_DIR = path.resolve(__dirname,'src');
 module.exports = {
   mode: 'development',
   entry:  "./src/js/index.js",
-  devtool: 'inline-source-map',
+  devtool: 'no-source-map',
   target: 'node',
   module: {
     rules: [

@@ -39,6 +39,10 @@ describe("Stress tests on different NFT proposals", function () {
     const ERC721Test = await ethers.getContractFactory("ERC721Test");
     e721 = await ERC721Test.deploy();
     await e721.deployed();
+    
+    const ERC721ATest = await ethers.getContractFactory("ERC721ATest");
+    e721a = await ERC721ATest.deploy();
+    await e721a.deployed();
   })
 
   it("Should mint 10 NFT from ERC721", async function () {
@@ -266,12 +270,109 @@ it("Should LOOP mint 1000 NFT with different accounts from ERC1155", async funct
   expect(await e11.balanceOf(addrAll[999].address,999)).to.equal(1);
 });
 
+/**
+ * 
+ * AZUKI ERC721A Tests
+ * 
+ */
 
+ it("Should mint 10 NFT from ERC721A", async function () {
+  for(let i = 0; i<10; ++i){
+    let tx = await e721a.connect(addr1).claim();
+    let receipt = await tx.wait();
+    const gasUsed = receipt.cumulativeGasUsed;
+    gasUsage.claimERC721A = gasUsage?.claimERC721A ? gasUsage.claimERC721A.add(gasUsed) : gasUsed;
+  }
+  gasUsage.claimERC721AString = gasUsage.claimERC721A.toString();
+  expect(await e721a.ownerOf(1)).to.equal(addr1.address);
+});
+
+it("Should mint 100 NFT from ERC721A", async function () {
+    for(let i = 0; i<100; ++i){
+      let tx = await e721a.connect(addr1).claim();
+      let receipt = await tx.wait();
+      const gasUsed = receipt.cumulativeGasUsed;
+      gasUsage.claimERC721A_100 = gasUsage?.claimERC721A_100 ? gasUsage.claimERC721A_100.add(gasUsed) : gasUsed;
+    }
+    gasUsage.claimERC721AString_100 = gasUsage.claimERC721A_100.toString();
+    expect(await e721a.ownerOf(99)).to.equal(addr1.address);
+});
+
+it("Should mint 1000 NFT from ERC721A", async function () {
+  for(let i = 0; i<1000; ++i){
+    let tx = await e721a.connect(addr1).claim();
+    let receipt = await tx.wait();
+    const gasUsed = receipt.cumulativeGasUsed;
+    gasUsage.claimERC721A_1000 = gasUsage?.claimERC721A_1000 ? gasUsage.claimERC721A_1000.add(gasUsed) : gasUsed;
+  }
+  gasUsage.claimERC721AString_1000 = gasUsage.claimERC721A_1000.toString();
+  expect(await e721a.ownerOf(999)).to.equal(addr1.address);
+});
+
+// it("Should mint 7777 NFT from ERC721A", async function () {
+//   for(let i = 0; i<7777; ++i){
+//     let tx = await e721a.connect(addr1).claim();
+//     let receipt = await tx.wait();
+//     const gasUsed = receipt.cumulativeGasUsed;
+//     gasUsage.claimERC721A_7777 = gasUsage?.claimERC721A_7777 ? gasUsage.claimERC721A_7777.add(gasUsed) : gasUsed;
+//   }
+//   gasUsage.claimERC721AString_7777 = gasUsage.claimERC721A_7777.toString();
+//   expect(await e721a.ownerOf(999)).to.equal(addr1.address);
+// });
+
+/**
+* 
+* MINT WITH DIFFERENT ACCOUNTS
+* 
+*/
+
+it("Should mint with different accounts 10 NFT from ERC721A", async function () {
+for(let i = 0; i<10; ++i){
+  let tx = await e721a.connect(addrAll[i]).claim();
+  let receipt = await tx.wait();
+  const gasUsed = receipt.cumulativeGasUsed;
+  gasUsage.claimERC721A_wallet = gasUsage?.claimERC721A_wallet ? gasUsage.claimERC721A_wallet.add(gasUsed) : gasUsed;
+}
+gasUsage.claimERC721AString_wallet = gasUsage.claimERC721A_wallet.toString();
+expect(await e721a.ownerOf(1)).to.equal(addrAll[1].address);
+});
+
+it("Should mint with different accounts 100 NFT from ERC721A", async function () {
+  for(let i = 0; i<100; ++i){
+    let tx = await e721a.connect(addrAll[i]).claim();
+    let receipt = await tx.wait();
+    const gasUsed = receipt.cumulativeGasUsed;
+    gasUsage.claimERC721A_wallet100 = gasUsage?.claimERC721A_wallet100 ? gasUsage.claimERC721A_wallet100.add(gasUsed) : gasUsed;
+  }
+  gasUsage.claimERC721AString_wallet100 = gasUsage.claimERC721A_wallet100.toString();
+  expect(await e721a.ownerOf(99)).to.equal(addrAll[99].address);
+});
+
+it("Should mint with different accounts 1000 NFT from ERC721A", async function () {
+for(let i = 0; i<1000; ++i){
+  let tx = await e721a.connect(addrAll[i]).claim();
+  let receipt = await tx.wait();
+  const gasUsed = receipt.cumulativeGasUsed;
+  gasUsage.claimERC721A_wallet1000 = gasUsage?.claimERC721A_wallet1000 ? gasUsage.claimERC721A_wallet1000.add(gasUsed) : gasUsed;
+}
+gasUsage.claimERC721AString_wallet1000 = gasUsage.claimERC721A_wallet1000.toString();
+expect(await e721a.ownerOf(999)).to.equal(addrAll[999].address);
+});
 
 
   it("", async function(){
     gasUsage.difference = gasUsage.claimERC721_wallet1000.sub(gasUsage.claimERC1155_loopWallet1000);
     gasUsage.difference = gasUsage.difference.toString();
+    
+    const big1kTable = []
+    big1kTable.push(["ERC721 claim from one wallet",parseInt(gasUsage.claimERC721_1000.toString())]);
+    big1kTable.push(["ERC721 claim from multiple wallets",parseInt(gasUsage.claimERC721_wallet1000).toString()]);
+    big1kTable.push(["ERC721A claim from one wallet",parseInt(gasUsage.claimERC721A_1000.toString())]);
+    big1kTable.push(["ERC721A claim from multiple wallets",parseInt(gasUsage.claimERC721A_wallet1000.toString())]);
+    big1kTable.push(["ERC1155 claim from one wallet batch",parseInt(gasUsage.claimERC1155_batch1000.toString())]);
+    big1kTable.push(["ERC1155 claim from one wallet loop",parseInt(gasUsage.claimERC1155_loop1000.toString())]);
+    big1kTable.push(["ERC1155 claim from multiple wallets loop",parseInt(gasUsage.claimERC1155_loopWallet1000.toString())]);
+
     delete gasUsage.claimERC721;
     delete gasUsage.claimERC721_100;
     delete gasUsage.claimERC721_1000;
@@ -279,6 +380,14 @@ it("Should LOOP mint 1000 NFT with different accounts from ERC1155", async funct
     delete gasUsage.claimERC721_wallet;
     delete gasUsage.claimERC721_wallet100;
     delete gasUsage.claimERC721_wallet1000;
+
+    delete gasUsage.claimERC721A;
+    delete gasUsage.claimERC721A_100;
+    delete gasUsage.claimERC721A_1000;
+    // delete gasUsage.claimERC721A_7777; // To be able to test this big loops, need to increase timeout and gas hardhat config
+    delete gasUsage.claimERC721A_wallet;
+    delete gasUsage.claimERC721A_wallet100;
+    delete gasUsage.claimERC721A_wallet1000;
     
     delete gasUsage.claimERC1155_batch10;
     delete gasUsage.claimERC1155_batch100;
@@ -291,6 +400,18 @@ it("Should LOOP mint 1000 NFT with different accounts from ERC1155", async funct
     delete gasUsage.claimERC1155_loopWallet;
     delete gasUsage.claimERC1155_loopWallet100;
     delete gasUsage.claimERC1155_loopWallet1000;
+    
+    function compare( a, b ) {
+      if ( a[1] < b[1] ){
+        return -1;
+      }
+      if ( a[1] > b[1] ){
+        return 1;
+      }
+      return 0;
+    }
+
     console.table(gasUsage);
+    console.table(big1kTable.sort(compare));
   })
 });

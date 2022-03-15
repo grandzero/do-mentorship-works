@@ -66,8 +66,8 @@ contract CryptoFund {
     function registerStartup(uint256 proposalAmount) external {
         require(proposalAmount > 0, "Minimum amount can't be 0");
         require(activeState == State.Pending, "Acceptance completed");
-        Startup memory newRegister = Startup(proposalAmount, 0);
-        startups[msg.sender] = newRegister;
+        // Startup memory newRegister = Startup(proposalAmount, 0);
+        startups[msg.sender] = Startup(proposalAmount, 0);
     }
 
     /**
@@ -94,8 +94,8 @@ contract CryptoFund {
             msg.value > 0,
             "You need to send at least 1 wei to register as investor"
         );
-        investors[msg.sender].totalRegisterAmount = msg.value;
-        investors[msg.sender].voteRightLeft = msg.value;
+        investors[msg.sender].totalRegisterAmount += msg.value;
+        investors[msg.sender].voteRightLeft += msg.value;
     }
 
     /**
@@ -130,10 +130,10 @@ contract CryptoFund {
         view
         returns (address, uint256)
     {
-        EnumerableMap.AddressToUintMap storage invesments = usersInvestments[
-            msg.sender
-        ];
-        return invesments.at(index);
+        // EnumerableMap.AddressToUintMap storage invesments = usersInvestments[
+        //     msg.sender
+        // ];
+        return usersInvestments[msg.sender].at(index);
     }
 
     /**
@@ -160,6 +160,7 @@ contract CryptoFund {
             msg.sender
         ];
         (bool success, uint256 investedAmount) = invesments.tryGet(_startup);
+        // Unchecked kullan taşma koşulları, gas avantajı sağlar
         invesments.set(_startup, investedAmount + _amount);
         startups[_startup].totalFunded += _amount;
         if (
@@ -222,7 +223,9 @@ contract CryptoFund {
         uint256 withdrawAmount;
         withdrawAmount += investors[msg.sender].voteRightLeft;
 
-        for (uint256 i = 0; i < sendersInvestments.length(); i++) {
+        // No need to run a loop
+        // We need to calculate only winners ratio and we can return all invested amount
+        for (uint256 i; i < sendersInvestments.length(); i++) {
             (address startup, uint256 investedAmount) = sendersInvestments.at(
                 i
             );
